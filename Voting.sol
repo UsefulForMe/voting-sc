@@ -85,12 +85,12 @@ contract VotingSmartContract {
             "Invalid candidate"
         );
 
-        bool isVoted = voted[poolId][msg.sender];
-        require(!isVoted, "You have already voted for this pool");
+        require(!isVoted(poolId), "You have already voted for this pool");
 
         candidatesByPool[poolId][candidateId].votes++;
         candidatesByPool[poolId][candidateId].voters.push(msg.sender);
         pools[poolId].totalVotes++;
+        poolList[poolId].totalVotes++;
         voted[poolId][msg.sender] = true;
 
         emit PoolVoted(
@@ -116,6 +116,10 @@ contract VotingSmartContract {
         returns (Candidate[] memory)
     {
         return candidatesByPool[poolId];
+    }
+
+    function isVoted(uint256 poolId) public view returns (bool) {
+        return voted[poolId][msg.sender];
     }
 
     event PoolCreated(
