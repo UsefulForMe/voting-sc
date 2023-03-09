@@ -72,7 +72,14 @@ contract VotingSmartContract {
             candidatesByPool[length].push(candidate);
         }
 
-        emit PoolCreated(length, name, description, closedAt, block.timestamp);
+        emit PoolCreated(
+            length,
+            name,
+            description,
+            closedAt,
+            block.timestamp,
+            _cadidates
+        );
     }
 
     function vote(uint256 poolId, uint256 candidateId) public {
@@ -85,7 +92,10 @@ contract VotingSmartContract {
             "Invalid candidate"
         );
 
-        require(!isVoted(poolId), "You have already voted for this pool");
+        require(
+            !isVoted(poolId, msg.sender),
+            "You have already voted for this pool"
+        );
 
         candidatesByPool[poolId][candidateId].votes++;
         candidatesByPool[poolId][candidateId].voters.push(msg.sender);
@@ -110,16 +120,14 @@ contract VotingSmartContract {
         return poolList;
     }
 
-    function getCandidates(uint256 poolId)
-        public
-        view
-        returns (Candidate[] memory)
-    {
+    function getCandidates(
+        uint256 poolId
+    ) public view returns (Candidate[] memory) {
         return candidatesByPool[poolId];
     }
 
-    function isVoted(uint256 poolId) public view returns (bool) {
-        return voted[poolId][msg.sender];
+    function isVoted(uint256 poolId, address voter) public view returns (bool) {
+        return voted[poolId][voter];
     }
 
     event PoolCreated(
@@ -127,7 +135,8 @@ contract VotingSmartContract {
         string name,
         string description,
         uint256 closedAt,
-        uint256 timestamp
+        uint256 timestamp,
+        string[] cadidates
     );
 
     event PoolVoted(
