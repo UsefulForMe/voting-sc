@@ -25,6 +25,7 @@ contract VotingSmartContract {
     mapping(uint256 => Pool) private pools;
     mapping(uint256 => mapping(address => bool)) private voted;
     mapping(uint256 => Candidate[]) private candidatesByPool;
+    mapping(address => bool) moderators;
 
     Pool[] private poolList;
 
@@ -47,7 +48,11 @@ contract VotingSmartContract {
         string[] calldata _cadidates,
         uint256 closedAt
     ) public {
-        require(isOwner(), "Only owner can create a pool");
+        require(
+            isOwner() || isModerator(msg.sender),
+            "Only owner/moderator can create pool"
+        );
+
         uint256 length = poolList.length;
 
         Pool memory pool = Pool(
@@ -129,6 +134,34 @@ contract VotingSmartContract {
     function isVoted(uint256 poolId, address voter) public view returns (bool) {
         return voted[poolId][voter];
     }
+
+    function isModerator(address moderator) public view returns (bool) {
+        return moderators[moderator];
+    }
+
+    function getRole(address moderator) public view returns (uint64) {
+        if (isOwner()) {
+            return 2;
+        } else if (isModerator(moderator)) {
+            return 1;
+        }
+        return 0;
+    }
+
+    function addModerator(address moderator) public {
+        require(isOwner(), "Only owner can add moderator");
+        moderators[moderator] = true;
+        emit ModeratorAdded(moderator);
+    }
+
+    function removeModerator(address moderator) public {
+        require(isOwner(), "Only owner can remove moderator");
+        moderators[moderator] = false;
+        emit ModeratorRemoved(moderator);
+    }
+
+    event ModeratorAdded(address moderator);
+    event ModeratorRemoved(address moderator);
 
     event PoolCreated(
         uint256 id,
